@@ -164,6 +164,8 @@ void objCenter(onum){
     double minv[4][4];
     double xSum, ySum, zSum;
     int i;
+	
+    xSum = ySum = zSum = 0;	
 
     D3d_make_identity(m);
     D3d_make_identity(minv);
@@ -270,7 +272,7 @@ int main(int argc, char **argv){
 			D3d_translate(m,minv,0,-1,0);}
 		else if( v == 'd'){ // backward in z direction
 			D3d_translate(m,minv,0,0,-1);}
-		else if(v>='0' && v<=9){
+		else{
 	  		go = v - 48;  //otherwise press 0 1 2 to get other pic and translate - 48 ASCII-code 
 		}
 		D3d_mat_mult_points(x[go],y[go],z[go],m,x[go],y[go],z[go],numpoints[go]);
