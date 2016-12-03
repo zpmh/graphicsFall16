@@ -123,8 +123,6 @@ void draw_file(int onum){
 
 		//   G_rgb(red[onum][i],grn[onum][i],blu[onum][i]);
 		G_rgb(1,0,0) ;
-       		for(j=0; j<psize[onum][i]; j++){
-		}
 
        	 G_polygon(x_current,y_current,psize[onum][i]);
     	}
