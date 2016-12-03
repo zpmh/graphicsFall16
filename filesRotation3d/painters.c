@@ -8,8 +8,8 @@ int numobjects;
 int numpoints[10];
 double x[10][10000], y[10][10000], z[10][10000];
 int numpolys[10000];
-int psize[10][1000];
-int con[10][5000][2000];  // is this array too small
+int psize[10][10000];
+int con[10][10000][200];
 double red[10][5000], grn[10][5000], blu[10][5000];
 double cx,cy,cz;
 
@@ -19,10 +19,54 @@ struct {
   int polynum ;
   double dist ;
 }
-THING ;
+THING;
 
-THING T[10000]; //thing is a polygon basically
+THING allpolys[10000];
 
+void print_array(int n) {
+  int i ;
+  for (i = 0 ; i < n ; i++) {
+    //printf("%d %d %lf\n",allpolys[i].objnum, allpolys[i].polynum, allpolys[i].dist) ;
+  }
+  //printf("\n") ;
+}
+
+int compare (const void *p, const void *q) {
+  THING *a, *b ;
+
+  a = (THING*)p ;
+  b = (THING*)q ;
+
+  if  (((*a).dist) < ((*b).dist)) return -1 ;
+  else if (((*a).dist) > ((*b).dist)) return 1 ;
+  else return 0;
+}
+
+
+int init_array() {  
+
+  int allpolysN = 0;
+  int i;
+  int j;
+
+  //printf("numobjects = %d\n",numobjects) ;
+
+  for (i = 0; i < numobjects; i++) { //COUNT TOTAL NUMBER OF POLYGONS IN SORT and INITIALIZE 
+    for (j = 0; j < numpolys[i]; j++) {
+      allpolys[allpolysN].objnum = i;
+      allpolys[allpolysN].polynum = j;
+      allpolys[allpolysN].dist = z[i][con[i][j][0]];
+      allpolysN = allpolysN + 1;
+    }  
+  }
+
+  qsort (allpolys, allpolysN, sizeof(THING), compare);
+  //printf("hello  %d\n",allpolysN) ;
+
+  print_array(allpolysN);
+
+  return allpolysN;
+}
 
 
 
@@ -100,14 +144,22 @@ double zmin(int onum){
 
 void draw_file(int onum){
 
-	int i,j;
-	double x_current[1000], y_current[1000], z_current[1000];
-    	for(i=0; i<numpolys[onum];i++){
+	int i,j,k;
+	double x_current[10000], y_current[10000], z_current[10000];
+
+	int allpolysN = init_array();
+
+	for(k=allpolysN; k>=0; k--){
+		onum = allpolys[k].objnum;
+		i = allpolys[k].polynum;	
+	
+
+    	//for(i=0; i<numpolys[onum];i++){
        		for(j=0; j<psize[onum][i]; j++){
 	// finding the original values of x, y and z points
 		 	x_current[j] = x[onum][con[onum][i][j]];
 		 	y_current[j] = y[onum][con[onum][i][j]];
-		 	z_current[j] = z[onum][con[onum][i][j]];
+		 	z_current[j] = z[onum][con[onum][i][j]];			 
 
 	// find the distance each point has to projection screen
     		y_current[j] = y_current[j] / z_current[j];
@@ -121,15 +173,21 @@ void draw_file(int onum){
         //you could do the two steps above in one step...
 		} // end for j
 
-		//   G_rgb(red[onum][i],grn[onum][i],blu[onum][i]);
-		G_rgb(1,0,0) ;
-       		for(j=0; j<psize[onum][i]; j++){
+		//compute the distance of poly and then put them into an array at this point
+
+		if(onum%2 == 0){
+			G_rgb(0,0,1);
+		} else {
+			G_rgb(1,0,0);
 		}
 
-       	 G_polygon(x_current,y_current,psize[onum][i]);
+		//G_rgb(red[onum][i],grn[onum][i],blu[onum][i]);
+
+       	 G_fill_polygon(x_current,y_current,psize[onum][i]);
+	 G_rgb(96,96,96);
+	 G_polygon(x_current, y_current, psize[onum][i]);
     	}
 }
-
 
 void center(onum){
 
@@ -207,9 +265,11 @@ int main(int argc, char **argv){
     G_init_graphics(600,600);
     G_rgb(0,0,0);
     G_clear();	
+
+    numobjects = argc-1;
     
     //attempt to open file
-    for(i=0; i<argc-1; i++){
+    for(i=0; i<numobjects; i++){
 
 		f= fopen(argv[i+1], "r");
 		if(f == NULL) {
@@ -249,6 +309,7 @@ int main(int argc, char **argv){
      //q = quit
 
     while(v != 'q'){
+
       G_rgb(0,0,0);
       D3d_make_identity(m);
 		D3d_make_identity(minv);
@@ -284,7 +345,6 @@ int main(int argc, char **argv){
 			D3d_translate(m,minv,0,0,-1);}
 		else{
 	  		go = v - 48;  //otherwise press 0 1 2 to get other pic and translate - 48 ASCII-code 
-			printf(" %d", go);
 		}
 
 		D3d_mat_mult_points(x[go],y[go],z[go],m,x[go],y[go],z[go],numpoints[go]);
