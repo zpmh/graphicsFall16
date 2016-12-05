@@ -100,6 +100,11 @@ int vecs(double *v,double *u,double w[3]){
   w[0]= v[0]-u[0];
   w[1]= v[1]-u[1];
   w[2]= v[2]-u[2];
+
+  if(w[0] == w[1] && w[1] == w[2]){ 
+	printf("scalar multiples");
+	return -1;
+  }
 	
   return 1;
 }
@@ -211,6 +216,8 @@ int lightcolor(THING allpolys,double *shade){
   vecs(p,q,v);
   vecs(p,r,u);
 
+	// check that not scalar multiples - if vecs = -1 do something? 
+
   crossprod(v, u, Nu);
 
   Nu[0] = Nu[0] / vecsize(Nu) ; 
@@ -231,16 +238,24 @@ int lightcolor(THING allpolys,double *shade){
   Eu[1] = p[1] / vecsize(Nu);
   Eu[2] = p[2] / vecsize(Nu);
 
-  if(dotprod(Nu,Eu) <0){ intensity = ambient; } // skip the rest and go to the next polygon !!!
+  if(dotprod(Nu,Eu) < 0){ 
+	shade[0] = ambient/(ambient+maxdiff)*rinit; 
+	shade[1] = ambient/(ambient+maxdiff)*ginit; 
+	shade[2] = ambient/(ambient+maxdiff)*binit; 
+	return 1; } // skip the rest and go to the next polygon !!!
 
   cosa = dotprod(Nu,Lu);
   cosb = dotprod(Eu,Ru);
 
+  if(cosb<0){
+	cosb=0;
+  }
+
   intensity = ambient + maxdiff*cosa + (1-ambient-maxdiff)*pow(cosb,specpow);
 
-  shade[0] = intensity; ///(ambient+maxdiff)*rinit;     TO CHECK IF WORKING IN GRAY SCALE
-  shade[1] = intensity; ///(ambient+maxdiff)*ginit;
-  shade[2] = intensity; ///(ambient+maxdiff)*binit;
+  shade[0] = (intensity/(ambient+maxdiff))*rinit;    
+  shade[1] = (intensity/(ambient+maxdiff))*ginit;
+  shade[2] = (intensity/(ambient+maxdiff))*binit;
 	
   return 1;
 }
